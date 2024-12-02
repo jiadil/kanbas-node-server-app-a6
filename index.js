@@ -21,7 +21,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kanbas";
-mongoose.connect(CONNECTION_STRING);
+
+mongoose.connect(CONNECTION_STRING, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000
+})
+    .then(() => {
+        console.log("Connected successfully to MongoDB Atlas!");
+    })
+    .catch((error) => {
+        console.error("MongoDB Atlas Connection Error:", {
+            message: error.message,
+            code: error.code,
+            name: error.name
+        });
+    });
+
 const app = express();
 
 // CORS configuration
@@ -35,6 +51,9 @@ app.use(
         ]
     })
 );
+
+// Parse JSON bodies
+app.use(express.json());
 
 // Session configuration
 const sessionOptions = {
@@ -53,11 +72,33 @@ if (process.env.NODE_ENV !== "development") {
 }
 app.use(session(sessionOptions));
 
-// Parse JSON bodies
-app.use(express.json());
+
 
 // Serve static files from the React build directory
 app.use(express.static(path.join(__dirname, '../build')));
+
+app.use(session({
+    secret: 'your-secret-key',
+    resave: true,
+    saveUninitialized: true,
+    name: 'sessionId',
+    cookie: {
+        secure: false, // Set to true only in production with HTTPS
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    },
+    rolling: true // Resets the cookie maxAge on every response
+}));
+
+// Add this middleware to track session state
+app.use((req, res, next) => {
+    console.log('Incoming request session:', {
+        id: req.sessionID,
+        user: req.session?.currentUser,
+        cookie: req.session?.cookie
+    });
+    next();
+});
 
 // API Routes
 UserRoutes(app);
