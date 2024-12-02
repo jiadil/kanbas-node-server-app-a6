@@ -7,10 +7,18 @@ export default function ModuleRoutes(app) {
     });
 
     app.put("/api/modules/:moduleId", async (req, res) => {
-        const { moduleId } = req.params;
-        const moduleUpdates = req.body;
-        const status = await modulesDao.updateModule(moduleId, moduleUpdates);
-        res.send(status);
+        try {
+            const { moduleId } = req.params;
+            const moduleUpdates = req.body;
+            const status = await modulesDao.updateModule(moduleId, moduleUpdates);
+            if (!status) {
+                return res.status(404).json({ message: "Module not found" });
+            }
+            res.json(status);
+        } catch (error) {
+            console.error("Error updating module:", error);
+            res.status(500).json({ message: "Error updating module" });
+        }
     });
 }
 

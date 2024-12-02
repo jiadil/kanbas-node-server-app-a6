@@ -44,14 +44,25 @@ export default function CourseRoutes(app) {
     // Module operations
     app.post("/api/courses/:courseId/modules", async (req, res) => {
         try {
+            console.log("CourseId from URL:", req.params.courseId);
+            console.log("Request body:", req.body);
+
             const module = {
                 ...req.body,
                 course: req.params.courseId,
             };
+            console.log("Module to be created:", module);
+
             const newModule = await modulesDao.createModule(module);
+            console.log("Created module:", newModule);
+
             res.json(newModule);
         } catch (error) {
-            res.status(500).json({ message: "Error creating module" });
+            console.error("Detailed error:", error);
+            res.status(500).json({
+                message: "Error creating module",
+                error: error.message
+            });
         }
     });
 
