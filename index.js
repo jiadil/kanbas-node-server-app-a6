@@ -1,4 +1,6 @@
-import express from 'express'
+import "dotenv/config";
+import express from 'express';
+import mongoose from "mongoose";
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -18,6 +20,8 @@ import session from "express-session";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kanbas";
+mongoose.connect(CONNECTION_STRING);
 const app = express();
 
 // CORS configuration
