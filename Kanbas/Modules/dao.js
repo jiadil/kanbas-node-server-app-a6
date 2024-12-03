@@ -1,12 +1,11 @@
-// import Database from "../Database/index.js";
 import model from "./model.js";
 import courseModel from "../Courses/model.js";
+import mongoose from "mongoose";
 
 export async function findModulesForCourse(courseId) {
     try {
-        const course = await courseModel.findById(courseId);
-
-        const modules = await model.find({ course: course.number });
+        // No need to find course first, just query directly with courseId
+        const modules = await model.find({ course: courseId });
         return modules;
     } catch (error) {
         throw error;
@@ -15,8 +14,17 @@ export async function findModulesForCourse(courseId) {
 
 export async function updateModule(moduleId, moduleUpdates) {
     try {
+        // Add validation for MongoDB ObjectId
+        if (!mongoose.isValidObjectId(moduleId)) {
+            const module = await model.findOne({ _id: moduleId });
+            if (!module) {
+                throw new Error(`Module not found with ID: ${moduleId}`);
+            }
+            moduleId = module._id; // Use the MongoDB ObjectId from the found document
+        }
+
         const cleanUpdates = { ...moduleUpdates };
-        delete cleanUpdates._id;  // Remove _id from updates
+        delete cleanUpdates._id;
         delete cleanUpdates.__v;
         delete cleanUpdates.editing;
 
@@ -30,27 +38,18 @@ export async function updateModule(moduleId, moduleUpdates) {
         );
         return result;
     } catch (error) {
+        console.error('Update error details:', error);
         throw error;
     }
 }
 
-// In your modulesDao.js
 export async function createModule(module) {
     try {
-        const course = await courseModel.findById(module.course);
-        if (!course) {
-            throw new Error("Course not found");
-        }
-
-        // Create new module with course number
-        const newModule = {
+        const createdModule = await model.create({
             name: module.name,
-            description: module.description,
-            course: course.number,  // Use course.number (like "RS101")
-            lessons: module.lessons || []  // Initialize empty lessons array if not provided
-        };
-
-        const createdModule = await model.create(newModule);
+            course: module.course,
+            lessons: module.lessons || []
+        });
         return createdModule;
     } catch (error) {
         throw error;
