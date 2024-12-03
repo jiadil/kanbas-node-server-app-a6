@@ -44,12 +44,7 @@ const app = express();
 app.use(
     cors({
         credentials: true,
-        origin: [
-            process.env.NETLIFY_URL || "http://localhost:3000",
-            "https://kanbas-react-web-app-jiadil.netlify.app",
-            "https://a6--kanbas-react-web-app-jiadil.netlify.app",
-            "https://kanbas-node-server-app-a6-ilyp.onrender.com"
-        ],
+        origin: true,  // This will reflect the request origin
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
     })
