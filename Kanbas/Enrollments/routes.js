@@ -44,9 +44,13 @@ export default function EnrollmentRoutes(app) {
         try {
             const { courseId } = req.params;
             const enrollments = await dao.findEnrollmentsByCourse(courseId);
-            res.json(enrollments);
+
+            const users = enrollments
+                .map(enrollment => enrollment.user)
+                .filter(user => user != null);
+            res.json(users);  // Return just the users array
         } catch (error) {
-            res.status(500).json({ message: "Error finding enrollments" });
+            res.status(500).json({ message: error.message });
         }
     };
 

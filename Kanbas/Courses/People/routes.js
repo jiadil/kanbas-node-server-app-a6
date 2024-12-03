@@ -2,20 +2,16 @@ import * as userDao from "../../Users/dao.js";
 import * as enrollmentsDao from "../../Enrollments/dao.js";
 
 function PeopleRoutes(app) {
-    const findUsersInCourse = (req, res) => {
+    const findUsersInCourse = async (req, res) => {
         try {
             const { courseId } = req.params;
-            const allUsers = userDao.findAllUsers();
-            const enrollments = enrollmentsDao.findEnrollmentsByCourse(courseId);
+            const enrollments = await enrollmentsDao.findEnrollmentsByCourse(courseId);
 
-            // Filter users who are enrolled in this course
-            const courseUsers = allUsers.filter(user =>
-                enrollments.some(enrollment =>
-                    enrollment.user === user._id.toString()
-                )
-            );
-
-            res.json(courseUsers);
+            // Extract user data from populated enrollments
+            const users = enrollments
+                .map(enrollment => enrollment.user)
+                .filter(user => user); // Remove any null/undefined users
+            res.json(users);
         } catch (error) {
             res.status(500).json({ message: error.message });
         }

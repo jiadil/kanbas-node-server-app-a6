@@ -90,16 +90,6 @@ app.use(session({
     rolling: true // Resets the cookie maxAge on every response
 }));
 
-// Add this middleware to track session state
-app.use((req, res, next) => {
-    console.log('Incoming request session:', {
-        id: req.sessionID,
-        user: req.session?.currentUser,
-        cookie: req.session?.cookie
-    });
-    next();
-});
-
 // API Routes
 UserRoutes(app);
 CourseRoutes(app);

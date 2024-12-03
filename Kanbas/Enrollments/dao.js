@@ -53,9 +53,19 @@ export const findEnrollmentsByUser = async (userId) => {
 };
 
 export const findEnrollmentsByCourse = async (courseId) => {
-    const enrollments = await model.find({ course: courseId })
-        .populate("user");
-    return enrollments;
+    try {
+        const enrollments = await model.find({ course: courseId })
+            .populate({
+                path: 'user',
+                model: 'UserModel',
+                select: 'firstName lastName username email role loginId section totalActivity'
+            })
+            .lean()
+            .exec();
+        return enrollments;
+    } catch (error) {
+        throw error;
+    }
 };
 
 export const enrollUserInCourse = async (userId, courseId) => {
