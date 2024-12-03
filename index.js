@@ -47,7 +47,7 @@ app.use(
         origin: [
             process.env.NETLIFY_URL || "http://localhost:3000",
             "https://kanbas-react-web-app-jiadil.netlify.app",
-            "https://a5--kanbas-react-web-app-jiadil.netlify.app"
+            "https://a6--kanbas-react-web-app-jiadil.netlify.app"
         ]
     })
 );
