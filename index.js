@@ -44,7 +44,11 @@ const app = express();
 app.use(
     cors({
         credentials: true,
-        origin: true,  // This will reflect the request origin
+        origin: [
+            process.env.NETLIFY_URL || "http://localhost:3000",
+            "https://kanbas-react-web-app-jiadil.netlify.app",
+            "https://a6--kanbas-react-web-app-jiadil.netlify.app"
+        ],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
     })
@@ -69,8 +73,7 @@ if (process.env.NODE_ENV !== "development") {
     sessionOptions.cookie = {
         ...sessionOptions.cookie,
         sameSite: 'none',
-        secure: true,
-        domain: '.onrender.com'  // This is important for cross-origin
+        secure: true
     };
 }
 
