@@ -47,10 +47,12 @@ app.use(
         origin: [
             process.env.NETLIFY_URL || "http://localhost:3000",
             "https://kanbas-react-web-app-jiadil.netlify.app",
-            "https://a5--kanbas-react-web-app-jiadil.netlify.app"
+            "https://a6--kanbas-react-web-app-jiadil.netlify.app"
         ],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
+        exposedHeaders: ['Access-Control-Allow-Origin'],
+        credentials: true
     })
 );
 
