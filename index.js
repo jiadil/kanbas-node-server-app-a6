@@ -13,13 +13,13 @@ import AssignmentRoutes from './Kanbas/Assignments/routes.js';
 import EnrollmentRoutes from "./Kanbas/Enrollments/routes.js";
 import PeopleRoutes from "./Kanbas/Courses/People/routes.js";
 import cors from "cors";
-import "dotenv/config";
 import session from "express-session";
 
 // Set up __dirname in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// MongoDB Connection
 const CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kanbas";
 
 mongoose.connect(CONNECTION_STRING, {
@@ -47,48 +47,43 @@ app.use(
         origin: [
             process.env.NETLIFY_URL || "http://localhost:3000",
             "https://kanbas-react-web-app-jiadil.netlify.app",
-            "https://a6--kanbas-react-web-app-jiadil.netlify.app"
-        ]
+            "https://a5--kanbas-react-web-app-jiadil.netlify.app"
+        ],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
     })
 );
 
 // Parse JSON bodies
 app.use(express.json());
 
-// Session configuration
+// Session configuration - SINGLE SESSION SETUP
 const sessionOptions = {
-    secret: process.env.SESSION_SECRET || "kanbas",
+    secret: process.env.SESSION_SECRET || "super secret session phrase",
     resave: false,
     saveUninitialized: false,
+    name: 'sessionId',
+    cookie: {
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    }
 };
 
+// Modify session for production environment
 if (process.env.NODE_ENV !== "development") {
     sessionOptions.proxy = true;
     sessionOptions.cookie = {
+        ...sessionOptions.cookie,
         sameSite: "none",
         secure: true,
-        domain: process.env.NODE_SERVER_DOMAIN,
     };
 }
+
+// Apply session middleware
 app.use(session(sessionOptions));
-
-
 
 // Serve static files from the React build directory
 app.use(express.static(path.join(__dirname, '../build')));
-
-app.use(session({
-    secret: 'your-secret-key',
-    resave: true,
-    saveUninitialized: true,
-    name: 'sessionId',
-    cookie: {
-        secure: false, // Set to true only in production with HTTPS
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-    },
-    rolling: true // Resets the cookie maxAge on every response
-}));
 
 // API Routes
 UserRoutes(app);
@@ -104,6 +99,12 @@ Hello(app);
 // Catch-all route for client-side routing
 app.get('/*', (req, res) => {
     res.sendFile(path.join(__dirname, '../build', 'index.html'));
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
 });
 
 // Start server
