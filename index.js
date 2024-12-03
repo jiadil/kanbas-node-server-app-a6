@@ -47,19 +47,17 @@ app.use(
         origin: [
             process.env.NETLIFY_URL || "http://localhost:3000",
             "https://kanbas-react-web-app-jiadil.netlify.app",
-            "https://a6--kanbas-react-web-app-jiadil.netlify.app"
+            "https://a6--kanbas-react-web-app-jiadil.netlify.app",
+            "https://kanbas-node-server-app-a6-ilyp.onrender.com"
         ],
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'],
-        exposedHeaders: ['Access-Control-Allow-Origin'],
-        credentials: true
     })
 );
 
 // Parse JSON bodies
 app.use(express.json());
 
-// Session configuration - SINGLE SESSION SETUP
 const sessionOptions = {
     secret: process.env.SESSION_SECRET || "super secret session phrase",
     resave: false,
@@ -71,13 +69,13 @@ const sessionOptions = {
     }
 };
 
-// Modify session for production environment
 if (process.env.NODE_ENV !== "development") {
     sessionOptions.proxy = true;
     sessionOptions.cookie = {
         ...sessionOptions.cookie,
-        sameSite: "none",
+        sameSite: 'none',
         secure: true,
+        domain: '.onrender.com'  // This is important for cross-origin
     };
 }
 
