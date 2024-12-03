@@ -49,18 +49,12 @@ export default function CourseRoutes(app) {
     // Module operations
     app.post("/api/courses/:courseId/modules", async (req, res) => {
         try {
-            console.log("CourseId from URL:", req.params.courseId);
-            console.log("Request body:", req.body);
-
             const module = {
                 ...req.body,
                 course: req.params.courseId,
             };
-            console.log("Module to be created:", module);
 
             const newModule = await modulesDao.createModule(module);
-            console.log("Created module:", newModule);
-
             res.json(newModule);
         } catch (error) {
             console.error("Detailed error:", error);
@@ -86,7 +80,11 @@ export default function CourseRoutes(app) {
             const assignments = await assignmentsDao.findAssignmentsForCourse(req.params.courseId);
             res.json(assignments);
         } catch (error) {
-            res.status(500).json({ message: "Error fetching assignments" });
+            console.error("Error fetching assignments:", error);
+            res.status(500).json({
+                message: "Error fetching assignments",
+                error: error.message
+            });
         }
     });
 

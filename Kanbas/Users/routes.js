@@ -45,20 +45,16 @@ export default function UserRoutes(app) {
 
             if (currentUser.role === "FACULTY" || currentUser.role === "ADMIN" || showAll === "true") {
                 const allCourses = await courseDao.findAllCourses();
-                console.log("All courses for faculty:", allCourses);
                 return res.json(allCourses);
             }
 
             // For students, get their enrolled courses through enrollments
             const enrollments = await enrollmentDao.findEnrollmentsByUser(currentUser._id);
-            console.log("Raw enrollments:", enrollments);
 
             // Filter out null courses and map to course objects
             const enrolledCourses = enrollments
                 .map(enrollment => enrollment.course)
                 .filter(course => course !== null);  // Remove null courses
-
-            console.log("Filtered enrolled courses:", enrolledCourses);
             return res.json(enrolledCourses);
         } catch (error) {
             console.error("Error finding courses:", error);
