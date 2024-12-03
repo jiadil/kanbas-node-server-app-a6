@@ -1,39 +1,69 @@
-import Database from "../Database/index.js";
+import model from "./model.js";
 
-export function enrollUserInCourse(userId, courseId) {
-    const { enrollments } = Database;
-    enrollments.push({ _id: Date.now(), user: userId, course: courseId });
-}
-
-export const findAllEnrollments = () => {
-    return Database.enrollments;
+export const findAllEnrollments = async () => {
+    const enrollments = await model.find()
+        .populate("user")
+        .populate("course");
+    return enrollments;
 };
 
-export const createEnrollment = (userId, courseId) => {
+export const createEnrollment = async (userId, courseId) => {
     const enrollment = {
-        _id: new Date().getTime().toString(),
         user: userId,
         course: courseId,
+        status: "ENROLLED"
     };
-    Database.enrollments = [...Database.enrollments, enrollment];
-    return enrollment;
+    const newEnrollment = await model.create(enrollment);
+    return newEnrollment;
 };
 
-export const deleteEnrollment = (userId, courseId) => {
-    Database.enrollments = Database.enrollments.filter(
-        (enrollment) => !(enrollment.user === userId && enrollment.course === courseId)
-    );
-    return { status: "OK" };
+export const deleteEnrollment = async (userId, courseId) => {
+    const result = await model.deleteOne({
+        user: userId,
+        course: courseId
+    });
+    return result;
 };
 
-export const findEnrollmentsByUser = (userId) => {
-    return Database.enrollments.filter(
-        (enrollment) => enrollment.user === userId
-    );
+export const findEnrollmentsByUser = async (userId) => {
+    try {
+        const enrollments = await model.find({ user: userId })
+            .populate({
+                path: "course",
+                model: "CourseModel"
+            });
+
+
+        // Clean up any enrollments with missing courses
+        const validEnrollments = enrollments.filter(enrollment => enrollment.course);
+
+        // If we found invalid enrollments, we might want to clean them up
+        if (validEnrollments.length !== enrollments.length) {
+            const invalidEnrollments = enrollments.filter(enrollment => !enrollment.course);
+            for (const invalid of invalidEnrollments) {
+                await model.deleteOne({ _id: invalid._id });
+            }
+        }
+
+        return validEnrollments;
+    } catch (error) {
+        console.error("Error in findEnrollmentsByUser:", error);
+        throw error;
+    }
 };
 
-export const findEnrollmentsByCourse = (courseId) => {
-    return Database.enrollments.filter(
-        (enrollment) => enrollment.course === courseId
-    );
+export const findEnrollmentsByCourse = async (courseId) => {
+    const enrollments = await model.find({ course: courseId })
+        .populate("user");
+    return enrollments;
+};
+
+export const enrollUserInCourse = async (userId, courseId) => {
+    const enrollment = {
+        user: userId,
+        course: courseId,
+        status: "ENROLLED"
+    };
+    const newEnrollment = await model.create(enrollment);
+    return newEnrollment;
 };

@@ -1,5 +1,6 @@
 import * as dao from "./dao.js";
 import * as courseDao from "../Courses/dao.js";
+import * as enrollmentDao from "../Enrollments/dao.js";
 
 export default function UserRoutes(app) {
     // Middleware
@@ -25,6 +26,11 @@ export default function UserRoutes(app) {
             delete courseData._id;
 
             const newCourse = await courseDao.createCourse(courseData);
+            try {
+                const enrollment = await enrollmentDao.createEnrollment(currentUser._id, newCourse._id);
+            } catch (enrollError) {
+                console.error("Error creating faculty enrollment:", enrollError);
+            }
             res.json(newCourse);
         } catch (error) {
             console.error("Error creating course:", error);
@@ -37,16 +43,53 @@ export default function UserRoutes(app) {
             const currentUser = req.session.currentUser;
             const { showAll } = req.query;
 
-            if (currentUser.role === "FACULTY" || showAll === "true") {
+            if (currentUser.role === "FACULTY" || currentUser.role === "ADMIN" || showAll === "true") {
                 const allCourses = await courseDao.findAllCourses();
+                console.log("All courses for faculty:", allCourses);
                 return res.json(allCourses);
             }
 
-            const enrolledCourses = await courseDao.findCoursesForEnrolledUser(currentUser._id);
+            // For students, get their enrolled courses through enrollments
+            const enrollments = await enrollmentDao.findEnrollmentsByUser(currentUser._id);
+            console.log("Raw enrollments:", enrollments);
+
+            // Filter out null courses and map to course objects
+            const enrolledCourses = enrollments
+                .map(enrollment => enrollment.course)
+                .filter(course => course !== null);  // Remove null courses
+
+            console.log("Filtered enrolled courses:", enrolledCourses);
             return res.json(enrolledCourses);
         } catch (error) {
             console.error("Error finding courses:", error);
             res.status(500).json({ message: "Error finding courses" });
+        }
+    };
+
+    const enrollInCourse = async (req, res) => {
+        try {
+            const currentUser = req.session.currentUser;
+            const { courseId } = req.params;
+
+            // Create new enrollment
+            const enrollment = await enrollmentDao.createEnrollment(currentUser._id, courseId);
+            res.json(enrollment);
+        } catch (error) {
+            console.error("Error enrolling in course:", error);
+            res.status(500).json({ message: "Error enrolling in course" });
+        }
+    };
+
+    const unenrollFromCourse = async (req, res) => {
+        try {
+            const currentUser = req.session.currentUser;
+            const { courseId } = req.params;
+
+            await enrollmentDao.deleteEnrollment(currentUser._id, courseId);
+            res.json({ message: "Successfully unenrolled" });
+        } catch (error) {
+            console.error("Error unenrolling from course:", error);
+            res.status(500).json({ message: "Error unenrolling from course" });
         }
     };
 
@@ -179,6 +222,8 @@ export default function UserRoutes(app) {
     app.post("/api/users/profile", requireAuth, profile);
 
     // Course management routes
+    app.post("/api/users/current/courses/:courseId", requireAuth, enrollInCourse);
+    app.delete("/api/users/current/courses/:courseId", requireAuth, unenrollFromCourse);
     app.post("/api/users/current/courses", requireAuth, createCourse);
     app.get("/api/users/current/courses", requireAuth, findCoursesForUser);
 

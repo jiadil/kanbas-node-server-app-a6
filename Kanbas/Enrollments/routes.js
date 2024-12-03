@@ -1,33 +1,53 @@
 import * as dao from "./dao.js";
 
 export default function EnrollmentRoutes(app) {
-    const findAllEnrollments = (req, res) => {
-        const enrollments = dao.findAllEnrollments();
-        res.json(enrollments);
+    const findAllEnrollments = async (req, res) => {
+        try {
+            const enrollments = await dao.findAllEnrollments();
+            res.json(enrollments);
+        } catch (error) {
+            res.status(500).json({ message: "Error finding enrollments" });
+        }
     };
 
-    const createEnrollment = (req, res) => {
-        const { userId, courseId } = req.body;
-        const enrollment = dao.createEnrollment(userId, courseId);
-        res.json(enrollment);
+    const createEnrollment = async (req, res) => {
+        try {
+            const { userId, courseId } = req.body;
+            const enrollment = await dao.createEnrollment(userId, courseId);
+            res.json(enrollment);
+        } catch (error) {
+            res.status(500).json({ message: "Error creating enrollment" });
+        }
     };
 
-    const deleteEnrollment = (req, res) => {
-        const { userId, courseId } = req.params;
-        const status = dao.deleteEnrollment(userId, courseId);
-        res.json(status);
+    const deleteEnrollment = async (req, res) => {
+        try {
+            const { userId, courseId } = req.params;
+            const status = await dao.deleteEnrollment(userId, courseId);
+            res.json(status);
+        } catch (error) {
+            res.status(500).json({ message: "Error deleting enrollment" });
+        }
     };
 
-    const findEnrollmentsByUser = (req, res) => {
-        const { userId } = req.params;
-        const enrollments = dao.findEnrollmentsByUser(userId);
-        res.json(enrollments);
+    const findEnrollmentsByUser = async (req, res) => {
+        try {
+            const { userId } = req.params;
+            const enrollments = await dao.findEnrollmentsByUser(userId);
+            res.json(enrollments);
+        } catch (error) {
+            res.status(500).json({ message: "Error finding enrollments" });
+        }
     };
 
-    const findEnrollmentsByCourse = (req, res) => {
-        const { courseId } = req.params;
-        const enrollments = dao.findEnrollmentsByCourse(courseId);
-        res.json(enrollments);
+    const findEnrollmentsByCourse = async (req, res) => {
+        try {
+            const { courseId } = req.params;
+            const enrollments = await dao.findEnrollmentsByCourse(courseId);
+            res.json(enrollments);
+        } catch (error) {
+            res.status(500).json({ message: "Error finding enrollments" });
+        }
     };
 
     app.get("/api/enrollments", findAllEnrollments);
